@@ -3,67 +3,72 @@ var randomID = '',
     e = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 for (var i = 0; i < 12; i++) randomID += e.charAt(Math.floor(Math.random() * e.length));
 var setTimeoutDelay = 0;
+// These two variables enable or disable specific detection codepaths,
+// if the variable is 'yes' or 'no' exactly.
+    aDefOne = 'no',
+    aDefTwo = 'no';
 window['' + randomID + ''] = (function() {
     /* List of common ad class names.
        One is picked at random from this list. */
-    var baitIDs = [
-  "ad-left",
-  "adBannerWrap",
-  "ad-frame",
-  "ad-header",
-  "ad-img",
-  "ad-inner",
-  "ad-label",
-  "ad-lb",
-  "ad-footer",
-  "ad-container",
-  "ad-container-1",
-  "ad-container-2",
-  "Ad300x145",
-  "Ad300x250",
-  "Ad728x90",
-  "AdArea",
-  "AdFrame1",
-  "AdFrame2",
-  "AdFrame3",
-  "AdFrame4",
-  "AdLayer1",
-  "AdLayer2",
-  "Ads_google_01",
-  "Ads_google_02",
-  "Ads_google_03",
-  "Ads_google_04",
-  "DivAd",
-  "DivAd1",
-  "DivAd2",
-  "DivAd3",
-  "DivAdA",
-  "DivAdB",
-  "DivAdC",
-  "AdImage",
-  "AdDiv",
-  "AdBox160",
-  "AdContainer",
-  "glinkswrapper",
-  "adTeaser",
-  "banner_ad",
-  "adBanner",
-  "adbanner",
-  "adAd",
-  "bannerad",
-  " ad_box",
-  " ad_channel",
-  " adserver",
-  " bannerid",
-  "adslot",
-  "popupad",
-  "adsense",
-  "google_ad",
-  "outbrain-paid",
-  "sponsored_link"
-]  
+        var baitIDs = [
+    "ad-left",
+    "adBannerWrap",
+    "ad-frame",
+    "ad-header",
+    "ad-img",
+    "ad-inner",
+    "ad-label",
+    "ad-lb",
+    "ad-footer",
+    "ad-container",
+    "ad-container-1",
+    "ad-container-2",
+    "Ad300x145",
+    "Ad300x250",
+    "Ad728x90",
+    "AdArea",
+    "AdFrame1",
+    "AdFrame2",
+    "AdFrame3",
+    "AdFrame4",
+    "AdLayer1",
+    "AdLayer2",
+    "Ads_google_01",
+    "Ads_google_02",
+    "Ads_google_03",
+    "Ads_google_04",
+    "DivAd",
+    "DivAd1",
+    "DivAd2",
+    "DivAd3",
+    "DivAdA",
+    "DivAdB",
+    "DivAdC",
+    "AdImage",
+    "AdDiv",
+    "AdBox160",
+    "AdContainer",
+    "glinkswrapper",
+    "adTeaser",
+    "banner_ad",
+    "adBanner",
+    "adbanner",
+    "adAd",
+    "bannerad",
+    " ad_box",
+    " ad_channel",
+    " adserver",
+    " bannerid",
+    "adslot",
+    "popupad",
+    "adsense",
+    "google_ad",
+    "outbrain-paid",
+    "sponsored_link"
+]
         // A random bait ID taken from the above list. Used in various places to avoid static blocking.
         randomBaitID = baitIDs[ Math.floor(Math.random() * baitIDs.length) ],
+
         __u1 = 1, // Unused.
 
         // Colors for the blockadblock prompt.
@@ -73,15 +78,13 @@ window['' + randomID + ''] = (function() {
         buttonColor = '#FFFFFF',
 
         __u2 = '', // Unused.
-  
+
         // Text to display when the blockadblock prompt is shown.
         welcomeText = 'Welcome!',
         primaryText = 'It looks like you\'re using an ad blocker. That\'s okay.  Who doesn\'t?',
         subtextText = 'But without advertising-income, we can\'t keep making this site awesome.',
         buttonText = 'I understand, I have disabled my ad blocker.  Let me in!',
- 
-        __u3 = 0, // Unused.
-        
+
         // If 1, adblock was detected.
         adblockDetected = 0,
         // If 1, BlockAdBlock will only nag the visitor once, rather than block access.
@@ -98,6 +101,32 @@ window['' + randomID + ''] = (function() {
         // Random image name.
         randomImage = randomStr() + '.jpg';
 
+    // Check if a given script exists in the document.
+    function scriptExists(href) {
+        if (href) href = href.substr(href.length - 15);
+        var scripts = document.getElementsByTagName('script');
+        for (var i = scripts.length; i--;) {
+            var src = String(scripts[i].src);
+            if (src) src = src.substr(src.length - 15);
+            if (src === href) return true
+        };
+        return false
+    };
+
+    // Checks if a given stylesheet exists in the document.
+    function stylesheetExists(href) {
+        if (href) href = href.substr(href.length - 15);
+        var styleSheets = document.styleSheets;
+        i = 0;
+        while (i < styleSheets.length) {
+            thisurl = styleSheets[i].href;
+            if (thisurl) thisurl = thisurl.substr(thisurl.length - 15);
+            if (thisurl === e) return true;
+            i++
+        };
+        return false
+    };
+    
     // Generate a random string of length len.
     function randomStr(len) {
         var str = '',
@@ -107,6 +136,13 @@ window['' + randomID + ''] = (function() {
             str += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
         }
         return str
+    };
+
+    function consolelog(e) {
+        // "Dev mode" check: developpers of BAB must set window.consolelog to 1.
+        if (window.consolelog == 1) {
+            console.log(e)
+        }
     };
 
     return {
@@ -121,14 +157,13 @@ window['' + randomID + ''] = (function() {
             var delay = '0.1',
                 passed_eid = randomBaitID,
                 bait = document.createElement('DIV');
-                
+            
             bait.id = passed_eid;
             bait.style.position = 'absolute';
             bait.style.left = '-5000px';
             bait.style.top = '-5000px';
             bait.style.height = '60px';
             bait.style.width = '468px';
-            bait.innerHTML = '<img src="http://doubleclick.net/' + randomImage + '">';
 
             var d = document.body.childNodes,
                 mid = Math.floor(d.length / 2);
@@ -153,7 +188,6 @@ window['' + randomID + ''] = (function() {
                 bannerBait.style.position = 'absolute';
                 bannerBait.style.left = '-5000px';
                 bannerBait.style.top = '-5000px';
-                bannerBait.innerHTML = '<img src="http://doubleclick.net/' + randomImage + '">';
                 document.body.appendChild(bannerBait)
             } else {
                 // Place the bait directly.
@@ -171,11 +205,6 @@ window['' + randomID + ''] = (function() {
                     check((bait.display == 'hidden'), delay);
                     check((bait.visibility == 'none'), delay);
                     check((bait.opacity == 0), delay);
-                    try {
-                        // Has the adblocker killed the children?
-                        // Check if "click", from "doubleclick.net", still exists.
-                        check((document.getElementById('banner_ad').innerHTML.indexOf('click') == -1), delay)
-                    } catch (e) {}
                 } else {
                     check(true, delay)
                 }
@@ -184,12 +213,66 @@ window['' + randomID + ''] = (function() {
 
         /* Checks if the passed predicate is true, and if so, 
            creates the popup window. */
-           check: function(checkPredicate, unused) {
+        check: function(checkPredicate, unused) {
             if ((checkPredicate) && (adblockDetected == 0)) {
                 // The standard bait case: ads are blocked.
+
+                /* These debug statements were left by the original developers,
+                   so I've left them here unchanged. They only appear in this version! */
+                consolelog('case1: standard bait says ads are blocked');
                 adblockDetected = 1;
-                window['' + randomID + ''].arm()
-            } else {}
+                window['' + randomID + ''].arm();
+                window['' + randomID + ''].check = function() { // Clean up.
+                    return
+                }
+            } else {
+                var q = 'ins.adsbygoogle',
+                    // Selects all Google ads in the document: 
+                    // all ins elements with class 'adsbygoogle'.
+                    adsbygoogleQuery = document.querySelector(q);
+
+                if ((adsbygoogleQuery) && (adblockDetected == 0)) {
+                    // Ads are not blocked, since the bait ad is still there,
+                    // and adblockDetected hasn't been set
+                    if (aDefOne == 'yes') {
+                        consolelog('case2: standard bait says ads are NOT blocked.');
+                        var adsbygoogle = '//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js\u0000';
+                        if (scriptExists(adsbygoogle)) {
+                            // Adsense pre-exists.
+                            consolelog('case2: And Adsense pre-exists.');
+                            if (adsbygoogleQuery.innerHTML.replace(/\s/g, '').length == 0) {
+                                // The ad's content was cleared, so ads are blocked.
+                                consolelog('case2: Ads are blocked.');
+                                window['' + randomID + ''].arm()
+                            }
+                        }
+                    };
+                    adblockDetected = 1
+                } else {
+                    if (adblockDetected == 0) {
+                        if (aDefTwo == 'yes') {
+                            /* Add Google ad code to head.
+                               If it errors, the adblocker must have blocked the connection. */
+                            var googleAdCode = '//static.doubleclick.net/instream/ad_status.js';
+                            consolelog('case3: standard bait says ads are NOT blocked. Maybe ???  No Adsense is found. Attempting to add Google ad code to head...');
+                            var script = document.createElement('script');
+                            script.setAttribute('type', 'text/javascript');
+                            script.setAttribute('src', googleAdCode);
+                            script.onerror = function() {
+                                window['' + randomID + ''].arm()
+                            };
+                            adblockDetected = 1;
+                            if (!scriptExists(googleAdCode)) {
+                                document.getElementsByTagName('head')[0].appendChild(script)
+                            };
+                            adsbygoogleQuery = 0;
+                            window['' + randomID + ''].check = function() {
+                                return
+                            }
+                        }
+                    }
+                }
+            }
         },
 
         /* Creates the blocker overlay, and cleans up. */
@@ -205,17 +288,27 @@ window['' + randomID + ''] = (function() {
                     sessionStorage.setItem('babn', (Math.random() + 1) * 1000)
                 }
             };
-                        
+
+            // Include cssreset.css, unless it is already included in the document.
+            var cssresetHref = '//yui.yahooapis.com/3.18.1/build/cssreset/cssreset-min.css';
+            if (!stylesheetExists(cssresetHref)) {
+                var cssReset = document.createElement('link');
+                cssReset.setAttribute('rel', 'stylesheet');
+                cssReset.setAttribute('type', 'text/css');
+                cssReset.setAttribute('href', cssresetHref);
+                document.getElementsByTagName('head')[0].appendChild(cssReset)
+            };
+
             // Stop the scheduled checks, since we triggered the adblocker. 
             clearInterval(checkCallback);
 
             // Clear the entire document, to avoid simply blocking the BAB div and get access to content.
             document.body.innerHTML = '';
 
-            document.body.style.margin = '0px';
-            document.body.style.padding = '0px';
+            document.body.style.cssText += 'margin:0px !important';
+            document.body.style.cssText += 'padding:0px !important';
 
-            // Create the BAB overlay.       
+            // Create the BAB overlay.
             var width = document.documentElement.clientWidth || window.innerWidth || document.body.clientWidth,
                 height = window.innerHeight || document.body.clientHeight || document.documentElement.clientHeight,
                 overlay = document.createElement('DIV'),
@@ -246,9 +339,9 @@ window['' + randomID + ''] = (function() {
             babLink.style.opacity = '.6';
             babLink.style.cursor = 'pointer';
             babLink.addEventListener('click', function() {
-                 // De-obfuscate the blockadblock domain name.
+                // De-obfuscate the blockadblock domain name.
                 bab_domain = bab_domain.split('').reverse().join('');
-                window.location.href = 'http://' + bab_domain
+                window.location.href = '//' + bab_domain
             });
             document.getElementById(overlayID).appendChild(babLink);
 
@@ -262,11 +355,12 @@ window['' + randomID + ''] = (function() {
             text.style.minHeight = height / 3.5 + 'px';
             text.style.backgroundColor = '#fff';
             text.style.zIndex = '10000';
-            text.style.fontFamily = 'Arial Black, Helvetica, Verdana, sans-serif';
-            text.style.fontSize = '16pt';
-            text.style.textAlign = 'center';
-            text.style.padding = '12px';
-            text.style.display = 'block';
+            text.style.cssText += 'font-family: "Arial Black", Helvetica, geneva, sans-serif !important';
+            text.style.cssText += 'line-height: normal !important';
+            text.style.cssText += 'font-size: 16pt !important';
+            text.style.cssText += 'text-align: center !important';
+            text.style.cssText += 'padding: 12px !important';
+            text.style.display += 'block';
             text.style.marginLeft = '60px';
             text.style.marginRight = '60px';
             text.style.borderRadius = '15px';
@@ -277,9 +371,9 @@ window['' + randomID + ''] = (function() {
                 primaryFontSize = 22,
                 subtextFontSize = 18,
                 buttonTextFontSize = 18;
-            if (window.innerWidth < 420) {
+            if ((window.innerWidth < 640) || (screen.width < 640)) {
                 text.style.zoom = '50%';
-                text.style.fontSize = '18pt';
+                text.style.cssText += 'font-size: 18pt !important';
                 text.style.marginLeft = '45px;';
                 babLink.style.zoom = '65%';
                 var welcomeFontSize = 36,
@@ -292,29 +386,29 @@ window['' + randomID + ''] = (function() {
             + welcomeFontSize 
             + 'pt;color:' 
             + textColor 
-            + ';font-family:sans-serif;font-weight:200;">'
+            + ';font-family:Helvetica, geneva, sans-serif;font-weight:200;margin-top:10px;margin-bottom:10px;">' 
             + welcomeText 
             + '</h3><h1 style="font-size:' 
             + primaryFontSize 
             + 'pt;font-weight:500;color:' 
             + textColor 
-            + '">' 
+            + ';margin-top:10px;margin-bottom:10px;">' 
             + primaryText 
-            + '</h1><hr style=" display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto; border:1px solid #CCC; width: 25%;"><p style="font-family:sans-serif;font-weight:300;font-size:' 
+            + '</h1><hr style=" display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto; border:1px solid #CCC; width: 25%;"><p style="font-family:Helvetica, geneva, sans-serif;font-weight:300;font-size:' 
             + subtextFontSize 
             + 'pt;color:' 
             + textColor 
-            + ';">' 
+            + ';">'
             + subtextText 
             + '</p><p style="margin-top:35px;"><div onmouseover="this.style.opacity=.9;" onmouseout="this.style.opacity=1;"  id="' 
             + randomStr() 
             + '" style="cursor:pointer;font-size:' 
             + buttonTextFontSize 
-            + 'pt;font-family:sans-serif; font-weight:300;border-radius:15px;padding:10px;background-color:' 
+            + 'pt;font-family:Helvetica, geneva, sans-serif; font-weight:300;border-radius:15px;padding:10px;background-color:' 
             + buttonBackgroundColor 
-            + ';color:' 
+            + ';color:'
             + buttonColor 
-            + ';padding-left:60px;padding-right:60px;width:60%;margin:auto;" onclick="window.location.reload();">' 
+            + ';padding-left:60px;padding-right:60px;width:60%;margin:auto;margin-top:10px;margin-bottom:10px;" onclick="window.location.reload();">' 
             + buttonText 
             + '</div></p>'
         }
