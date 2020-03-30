@@ -2,73 +2,131 @@
 var randomID = '',
     e = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 for (var i = 0; i < 12; i++) randomID += e.charAt(Math.floor(Math.random() * e.length));
-var setTimeoutDelay = 0;
+var setTimeoutDelay = 1,
 // These two variables enable or disable specific detection codepaths,
-// if the variable is 'yes' or 'no' exactly.
-    aDefOne = 'no',
-    aDefTwo = 'no';
+// if the variable % 3 == 0. They are all off by default.
+    aDefOne = 91,
+    aDefTwo = 178,
+    aDefThree = 19,
+    
+    /* Function that waits until the document is ready in a VERY
+       browser-compatible way, and executes the passed function.
+       Supports a wide range of browsers, even IE9. */
+    callOnDocumentReady = function(fn) {
+        var modernBrowser = false,
+            // Remove the event listeners, after setting them up.
+            cleanUpEventListeners = function() {
+                // Use the correct API based on browser version.
+                if (document.addEventListener) {
+                    document.removeEventListener('DOMContentLoaded', checkAndRunMain);
+                    window.removeEventListener('load', checkAndRunMain)
+                } else {
+                    document.detachEvent('onreadystatechange', checkAndRunMain);
+                    window.detachEvent('onload', checkAndRunMain)
+                }
+            },
+            // Check if we're on a modern browser, clean up event listeners and start the main.
+            checkAndRunMain = function() {
+                if (!modernBrowser && (document.addEventListener || event.type === 'load' || document.readyState === 'complete')) {
+                    modernBrowser = true;
+                    cleanUpEventListeners();
+                    fn()
+                }
+            };
+        // Use the correct API based on browser version.
+        if (document.readyState === 'complete') {
+            fn()
+        } else if (document.addEventListener) { // Set up event listeners for DOMContentLoaded.
+            document.addEventListener('DOMContentLoaded', checkAndRunMain);
+            window.addEventListener('load', checkAndRunMain)
+        } else { // < IE9: check for state change, and check for doScroll agressively too.
+            document.attachEvent('onreadystatechange', checkAndRunMain);
+            window.attachEvent('onload', checkAndRunMain);
+
+            var windowOrFrame = false;
+            try {
+                windowOrFrame = window.frameElement == null && document.documentElement
+            } catch (r) {};
+            if (windowOrFrame && windowOrFrame.doScroll) {
+                (function testForIEAndRunMain() {
+                    if (modernBrowser) return;
+                    try {
+                        // Test for doScroll, an IE-specific JS method.
+                        windowOrFrame.doScroll('left')
+                    } catch (e) {
+                        // If it fails, the document probably isn't ready:
+                        // try again in a bit.
+                        return setTimeout(testForIEAndRunMain, 50)
+                    };
+                    modernBrowser = true;
+                    cleanUpEventListeners();
+                    fn()
+                })()
+            }
+        }
+    };
 window['' + randomID + ''] = (function() {
     /* List of common ad class names.
        One is picked at random from this list. */
     var baitIDs = [
-    "ad-left",
-    "adBannerWrap",
-    "ad-frame",
-    "ad-header",
-    "ad-img",
-    "ad-inner",
-    "ad-label",
-    "ad-lb",
-    "ad-footer",
-    "ad-container",
-    "ad-container-1",
-    "ad-container-2",
-    "Ad300x145",
-    "Ad300x250",
-    "Ad728x90",
-    "AdArea",
-    "AdFrame1",
-    "AdFrame2",
-    "AdFrame3",
-    "AdFrame4",
-    "AdLayer1",
-    "AdLayer2",
-    "Ads_google_01",
-    "Ads_google_02",
-    "Ads_google_03",
-    "Ads_google_04",
-    "DivAd",
-    "DivAd1",
-    "DivAd2",
-    "DivAd3",
-    "DivAdA",
-    "DivAdB",
-    "DivAdC",
-    "AdImage",
-    "AdDiv",
-    "AdBox160",
-    "AdContainer",
-    "glinkswrapper",
-    "adTeaser",
-    "banner_ad",
-    "adBanner",
-    "adbanner",
-    "adAd",
-    "bannerad",
-    " ad_box",
-    "ad_channel",
-    "adserver",
-    "bannerid",
-    "adslot",
-    "popupad",
-    "adsense",
-    "google_ad",
-    "outbrain-paid",
-    "sponsored_link"
-    ], 
+        "ad-left",
+        "adBannerWrap",
+        "ad-frame",
+        "ad-header",
+        "ad-img",
+        "ad-inner",
+        "ad-label",
+        "ad-lb",
+        "ad-footer",
+        "ad-container",
+        "ad-container-1",
+        "ad-container-2",
+        "Ad300x145",
+        "Ad300x250",
+        "Ad728x90",
+        "AdArea",
+        "AdFrame1",
+        "AdFrame2",
+        "AdFrame3",
+        "AdFrame4",
+        "AdLayer1",
+        "AdLayer2",
+        "Ads_google_01",
+        "Ads_google_02",
+        "Ads_google_03",
+        "Ads_google_04",
+        "DivAd",
+        "DivAd1",
+        "DivAd2",
+        "DivAd3",
+        "DivAdA",
+        "DivAdB",
+        "DivAdC",
+        "AdImage",
+        "AdDiv",
+        "AdBox160",
+        "AdContainer",
+        "glinkswrapper",
+        "adTeaser",
+        "banner_ad",
+        "adBanner",
+        "adbanner",
+        "adAd",
+        "bannerad",
+        " ad_box",
+        "ad_channel",
+        "adserver",
+        "bannerid",
+        "adslot",
+        "popupad",
+        "adsense",
+        "google_ad",
+        "outbrain-paid",
+        "sponsored_link"
+      ],
         // A random bait ID taken from the above list. Used in various places to avoid static blocking.
         randomBaitID = baitIDs[ Math.floor(Math.random() * baitIDs.length) ],
-
+        
         __u1 = 1, // Unused.
 
         // Colors for the blockadblock prompt.
@@ -98,8 +156,8 @@ window['' + randomID + ''] = (function() {
            Global so that check() can tear it down later. */
         checkCallback = 0,
 
-        // Random image name.
-        randomImage = randomStr() + '.jpg';
+        // Random image name. Seemingly unused.
+        __u3 = randomStr() + '.jpg';
 
     // Check if a given script exists in the document.
     function scriptExists(href) {
@@ -117,12 +175,12 @@ window['' + randomID + ''] = (function() {
     function stylesheetExists(href) {
         if (href) href = href.substr(href.length - 15);
         var styleSheets = document.styleSheets;
-        i = 0;
-        while (i < styleSheets.length) {
-            thisurl = styleSheets[i].href;
+        baitImages = 0;
+        while (baitImages < styleSheets.length) {
+            thisurl = styleSheets[baitImages].href;
             if (thisurl) thisurl = thisurl.substr(thisurl.length - 15);
             if (thisurl === e) return true;
-            i++
+            baitImages++
         };
         return false
     };
@@ -191,18 +249,23 @@ window['' + randomID + ''] = (function() {
                 bait_image = '//' + domain_url + '/' + random_url + '.jpg'
             };
             spimg[i] = new Image();
+            // On error, wait for a while?
+            spimg[i].onerror = function() {
+                console.log("wow");
+                
+                var t = 1;
+                while (t < 7) {
+                    t++
+                }
+            };
             spimg[i].src = bait_image;
             i++
         }
     };
 
-    function consolelog(e) {
-        // "Dev mode" check: developpers of BAB must set window.consolelog to 1.
-        if (window.consolelog == 1) {
-            console.log(e)
-        }
-    };
-
+    // consolelog() that was present in the previous versions has
+    // been forcibly removed. Unused in this version.
+    function consolelog(str) {};
     return {
         /* Entry point. 
            Creates bait, then waits and checks
@@ -213,9 +276,10 @@ window['' + randomID + ''] = (function() {
             };
 
             var delay = '0.1',
+                passed_eid = randomBaitID,
                 bait = document.createElement('DIV');
 
-            bait.id = randomBaitID;
+            bait.id = passed_eid;
             bait.style.position = 'absolute';
             bait.style.left = '-5000px';
             bait.style.top = '-5000px';
@@ -279,11 +343,10 @@ window['' + randomID + ''] = (function() {
                This may explain the redundant style of checking adblockDetected at each turn, to be able to avoid
                race conditions no matter where in the codepath the second call to check() is.
              */
-
+            
             if ((checkPredicate) && (adblockDetected == 0)) {
                 // The standard bait case: ads are blocked.
                 adblockDetected = 1;
-                baitImages(Math.floor(Math.random() * 3) + 3);
                 window['' + randomID + ''].arm();
                 window['' + randomID + ''].check = function() { // Clean up.
                     return
@@ -297,60 +360,65 @@ window['' + randomID + ''] = (function() {
                 if ((adsbygoogleQuery) && (adblockDetected == 0)) {
                     // Ads are not blocked, since the bait ad is still there,
                     // and adblockDetected hasn't been set
-                    if (aDefOne == 'yes') {
-                        var adsbygoogle = '//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js\u0000';
+                    if ((aDefOne % 3) == 0) {
+                        var adsbygoogle = '//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
                         if (scriptExists(adsbygoogle)) {
                             // Adsense pre-exists.
                             if (adsbygoogleQuery.innerHTML.replace(/\s/g, '').length == 0) {
                                 // The ad's content was cleared, so ads are blocked.
-                                baitImages(Math.floor(Math.random() * 3) + 3); // ??
+                                adblockDetected = 1;
                                 window['' + randomID + ''].arm()
                             }
                         }
-                    };
-                    adblockDetected = 1
-                } else {
-                    var __u = false; // Unused.
-                    if (adblockDetected == 0) {
-                        if (aDefTwo == 'yes') {
-                            if (! window['' + randomID + ''].ranAlready) {
-                                /* Heuristic based blocking.
-                                   Try to add a bunch of bait images to the document.
-                                   If we succeed, there is an adblocker.
-                                   This method has a false positive, so it is disabled. */
-                                var favicons = [
-                                    "//www.google.com/adsense/start/images/favicon.ico",
-                                    "//www.gstatic.com/adx/doubleclick.ico",
-                                    "//advertising.yahoo.com/favicon.ico",
-                                    "//ads.twitter.com/favicon.ico",
-                                    "//www.doubleclickbygoogle.com/favicon.ico"
-                                  ],
-                                    len = favicons.length,
-                                    img = favicons[Math.floor(Math.random() * len)],
-                                    imgCopy = img;
-                                while (img == imgCopy) {
-                                    imgCopy = favicons[Math.floor(Math.random() * len)]
-                                };
-                                baitImages(Math.floor(Math.random() * 2) + 1);
-                                var m = new Image(),
-                                    c = new Image();
-                                m.onerror = function() {
-                                    baitImages(Math.floor(Math.random() * 2) + 1);
-                                    c.src = imgCopy;
-                                    baitImages(Math.floor(Math.random() * 2) + 1)
-                                };
-                                c.onerror = function() {
-                                    adblockDetected = 1;
-                                    baitImages(Math.floor(Math.random() * 3) + 1);
-                                    window['' + randomID + ''].arm()
-                                };
-                                m.src = img;
-                                baitImages(Math.floor(Math.random() * 3) + 1);
-                                window['' + randomID + ''].ranAlready = true
+                    }
+                };
+                var __u = false; // Unused.
+                if (adblockDetected == 0) {
+                    if ((aDefTwo % 3) == 0) {
+                        if (! window['' + randomID + ''].ranAlready) {
+                            /* Heuristic based blocking.
+                               Try to add a bunch of bait images to the document.
+                               If we succeed, there is an adblocker.
+                               This method has a false positive, so it is disabled. */
+                            var favicons = [
+                                "//www.google.com/adsense/start/images/favicon.ico",
+                                "//www.gstatic.com/adx/doubleclick.ico",
+                                "//advertising.yahoo.com/favicon.ico",
+                                "//ads.twitter.com/favicon.ico",
+                                "//www.doubleclickbygoogle.com/favicon.ico"
+                              ],
+                                len = favicons.length,
+                                img = favicons[Math.floor(Math.random() * len)],
+                                imgCopy = img;
+                            while (img == imgCopy) {
+                                imgCopy = favicons[Math.floor(Math.random() * len)]
                             };
-                            window['' + randomID + ''].check = function() {
-                                return
-                            }
+                            baitImages(Math.floor(Math.random() * 2) + 1);
+                            var m = new Image(),
+                                c = new Image();
+                            m.onerror = function() {
+                                baitImages(Math.floor(Math.random() * 2) + 1);
+                                c.src = imgCopy;
+                                baitImages(Math.floor(Math.random() * 2) + 1)
+                            };
+                            c.onerror = function() {
+                                adblockDetected = 1;
+                                baitImages(Math.floor(Math.random() * 3) + 1);
+                                window['' + randomID + ''].arm()
+                            };
+                            m.src = img;
+                            if ((aDefThree % 3) == 0) {
+                                m.onload = function() {
+                                    if ((m.width < 8) && (m.width > 0)) {
+                                        window['' + randomID + ''].arm()
+                                    }
+                                }
+                            };
+                            baitImages(Math.floor(Math.random() * 3) + 1);
+                            window['' + randomID + ''].ranAlready = !0
+                        };
+                        window['' + randomID + ''].check = function() {
+                            return
                         }
                     }
                 }
@@ -386,7 +454,7 @@ window['' + randomID + ''] = (function() {
 
             // Clear the entire document, to avoid simply blocking the BAB div and get access to content.
             document.body.innerHTML = '';
-            
+
             document.body.style.cssText += 'margin:0px !important';
             document.body.style.cssText += 'padding:0px !important';
 
@@ -404,7 +472,7 @@ window['' + randomID + ''] = (function() {
             overlay.style.backgroundColor = overlayColor;
             overlay.style.zIndex = '9999';
             document.body.appendChild(overlay);
-            
+
             var babSvg = '<a href="http://blockadblock.com"><svg id="FILLVECTID1" width="160" height="40"><image id="FILLVECTID2" width="160" height="40" xlink:href="data:image/png;base64,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">;</svg></a>';
             babSvg = babSvg.replace('FILLVECTID1', randomStr());
             babSvg = babSvg.replace('FILLVECTID2', randomStr());
@@ -443,8 +511,8 @@ window['' + randomID + ''] = (function() {
             text.style.cssText += 'text-align: center !important';
             text.style.cssText += 'padding: 12px !important';
             text.style.display += 'block';
-            text.style.marginLeft = '60px';
-            text.style.marginRight = '60px';
+            text.style.marginLeft = '30px';
+            text.style.marginRight = '30px';
             text.style.borderRadius = '15px';
             document.body.appendChild(text);
             text.style.boxShadow = '0px 14px 24px -8px rgba(0,0,0,0.3)';
@@ -458,50 +526,75 @@ window['' + randomID + ''] = (function() {
                 text.style.cssText += 'font-size: 18pt !important';
                 text.style.marginLeft = '45px;';
                 babLink.style.zoom = '65%';
-                var welcomeFontSize = 36,
-                    primaryFontSize = 27,
-                    subtextFontSize = 22,
-                    buttonTextFontSize = 22
+                var welcomeFontSize = 22,
+                    primaryFontSize = 18,
+                    subtextFontSize = 12,
+                    buttonTextFontSize = 12
             };
             text.innerHTML = 
             '<h3 style="color:#999;font-size:' 
             + welcomeFontSize 
             + 'pt;color:' 
-            + textColor
+            + textColor 
             + ';font-family:Helvetica, geneva, sans-serif;font-weight:200;margin-top:10px;margin-bottom:10px;text-align:center;">' 
-            + welcomeText
+            + welcomeText 
             + '</h3><h1 style="font-size:' 
             + primaryFontSize 
             + 'pt;font-weight:500;font-family:Helvetica, geneva, sans-serif;color:' 
-            + textColor
+            + textColor 
             + ';margin-top:10px;margin-bottom:10px;text-align:center;">' 
-            + primaryText
+            + primaryText 
             + '</h1><hr style=" display: block;margin-top: 0.5em;margin-bottom: 0.5em;margin-left: auto;margin-right: auto; border:1px solid #CCC; width: 25%;text-align:center;"><p style="font-family:Helvetica, geneva, sans-serif;font-weight:300;font-size:' 
             + subtextFontSize 
             + 'pt;color:' 
             + textColor 
             + ';text-align:center;">' 
-            + subtextText
+            + subtextText 
             + '</p><p style="margin-top:35px;"><div onmouseover="this.style.opacity=.9;" onmouseout="this.style.opacity=1;"  id="' 
             + randomStr() 
             + '" style="cursor:pointer;font-size:' 
             + buttonTextFontSize 
             + 'pt;font-family:Helvetica, geneva, sans-serif; font-weight:300;border-radius:15px;padding:10px;background-color:' 
-            + buttonBackgroundColor
+            + buttonBackgroundColor 
             + ';color:' 
-            + buttonColor
+            + buttonColor 
             + ';padding-left:60px;padding-right:60px;width:60%;margin:auto;margin-top:10px;margin-bottom:10px;" onclick="window.location.reload();">' 
-            + buttonText
+            + buttonText 
             + '</div></p>'
         }
     }
 })();
+// Calls the passed function after a delay, like setTimeOut.
+window.callAfterDelay = function(fn, delay) {
+    var dateNow = Date.now,
+        requestAnimationFrame = window.requestAnimationFrame,
+        initialTime = dateNow(), // When was this first called?
+        /* Loop recursively forever,
+           until enough time has elapsed, and call fn instead. */
+        cleared, o = function() {
+            dateNow() - initialTime < delay ? cleared || requestAnimationFrame(o) : fn()
+        };
+        
+    requestAnimationFrame(o);
+    return {
+        // Supposed to stop requestAnimationFrame callbacks, if the above loop never ended.
+        // However, this is never used.
+        clear: function() {
+            cleared = 1
+        }
+    }
+};
+var globalObject;
 if (document.body) {
     document.body.style.visibility = 'visible'
 };
-// If this script is run again, hide the blockadblock message.
-if (document.getElementById('babasbmsgx')) {
-    document.getElementById('babasbmsgx').style.visibility = 'hidden';
-    document.getElementById('babasbmsgx').style.display = 'none'
-};
-setTimeout(window['' + randomID + ''].bab(window['' + randomID + ''].check, window['' + randomID + ''].bab_elementid), setTimeoutDelay * 1000);
+callOnDocumentReady(function() {
+    // If this script is run again, hide the blockadblock message.
+    if (document.getElementById('babasbmsgx')) {
+        document.getElementById('babasbmsgx').style.visibility = 'hidden';
+        document.getElementById('babasbmsgx').style.display = 'none'
+    };
+    globalObject = window.callAfterDelay(function() {
+        window['' + randomID + ''].bab(window['' + randomID + ''].check, window['' + randomID + ''].arm)
+    }, setTimeoutDelay * 1000)
+});
