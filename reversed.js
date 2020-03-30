@@ -4,7 +4,66 @@ var randomID = '',
 for (var i = 0; i < 12; i++) randomID += e.charAt(Math.floor(Math.random() * e.length));
 var setTimeoutDelay = 0;
 window['' + randomID + ''] = (function() {
-    var eid = 'banner_ad', // Unused.
+    /* List of common ad class names.
+       One is picked at random from this list. */
+    var baitIDs = [
+  "ad-left",
+  "adBannerWrap",
+  "ad-frame",
+  "ad-header",
+  "ad-img",
+  "ad-inner",
+  "ad-label",
+  "ad-lb",
+  "ad-footer",
+  "ad-container",
+  "ad-container-1",
+  "ad-container-2",
+  "Ad300x145",
+  "Ad300x250",
+  "Ad728x90",
+  "AdArea",
+  "AdFrame1",
+  "AdFrame2",
+  "AdFrame3",
+  "AdFrame4",
+  "AdLayer1",
+  "AdLayer2",
+  "Ads_google_01",
+  "Ads_google_02",
+  "Ads_google_03",
+  "Ads_google_04",
+  "DivAd",
+  "DivAd1",
+  "DivAd2",
+  "DivAd3",
+  "DivAdA",
+  "DivAdB",
+  "DivAdC",
+  "AdImage",
+  "AdDiv",
+  "AdBox160",
+  "AdContainer",
+  "glinkswrapper",
+  "adTeaser",
+  "banner_ad",
+  "adBanner",
+  "adbanner",
+  "adAd",
+  "bannerad",
+  " ad_box",
+  " ad_channel",
+  " adserver",
+  " bannerid",
+  "adslot",
+  "popupad",
+  "adsense",
+  "google_ad",
+  "outbrain-paid",
+  "sponsored_link"
+]  
+        // A random bait ID taken from the above list. Used in various places to avoid static blocking.
+        randomBaitID = baitIDs[ Math.floor(Math.random() * baitIDs.length) ],
         __u1 = 1, // Unused.
 
         // Colors for the blockadblock prompt.
@@ -14,13 +73,15 @@ window['' + randomID + ''] = (function() {
         buttonColor = '#FFFFFF',
 
         __u2 = '', // Unused.
-
+  
         // Text to display when the blockadblock prompt is shown.
         welcomeText = 'Welcome!',
         primaryText = 'It looks like you\'re using an ad blocker. That\'s okay.  Who doesn\'t?',
         subtextText = 'But without advertising-income, we can\'t keep making this site awesome.',
         buttonText = 'I understand, I have disabled my ad blocker.  Let me in!',
  
+        __u3 = 0, // Unused.
+        
         // If 1, adblock was detected.
         adblockDetected = 0,
         // If 1, BlockAdBlock will only nag the visitor once, rather than block access.
@@ -32,7 +93,10 @@ window['' + randomID + ''] = (function() {
         /* A setInterval that checks for adblock presence.
            Set up in bab().
            Global so that check() can tear it down later. */
-        checkCallback = 0;
+        checkCallback = 0,
+
+        // Random image name.
+        randomImage = randomStr() + '.jpg';
 
     // Generate a random string of length len.
     function randomStr(len) {
@@ -55,15 +119,47 @@ window['' + randomID + ''] = (function() {
             };
 
             var delay = '0.1',
-                passed_eid = passed_eid ? passed_eid : 'banner_ad',
+                passed_eid = randomBaitID,
                 bait = document.createElement('DIV');
                 
             bait.id = passed_eid;
             bait.style.position = 'absolute';
-            bait.style.left = '-999px';
-            bait.innerHTML = '<img src="http://doubleclick.net/' + randomStr() + '.jpg">';
-            bait.appendChild(document.createTextNode('Â '));
-            document.body.appendChild(bait);
+            bait.style.left = '-5000px';
+            bait.style.top = '-5000px';
+            bait.style.height = '60px';
+            bait.style.width = '468px';
+            bait.innerHTML = '<img src="http://doubleclick.net/' + randomImage + '">';
+
+            var d = document.body.childNodes,
+                mid = Math.floor(d.length / 2);
+
+            // Is the document long enough?
+            if (mid > 15) {
+                // Create a floating container.
+                var floatingContainer = document.createElement('div');
+                floatingContainer.style.position = 'absolute';
+                floatingContainer.style.height = '0px';
+                floatingContainer.style.width = '0px';
+                floatingContainer.style.top = '-5000px';
+                floatingContainer.style.left = '-5000px';
+
+                // Insert the bait in the floating container.
+                document.body.insertBefore(floatingContainer, document.body.childNodes[mid]);
+                floatingContainer.appendChild(bait);
+
+                // Finally, create a bottom "banner ad" bait.
+                var bannerBait = document.createElement('DIV');
+                bannerBait.id = 'banner_ad';
+                bannerBait.style.position = 'absolute';
+                bannerBait.style.left = '-5000px';
+                bannerBait.style.top = '-5000px';
+                bannerBait.innerHTML = '<img src="http://doubleclick.net/' + randomImage + '">';
+                document.body.appendChild(bannerBait)
+            } else {
+                // Place the bait directly.
+                bait.id = 'banner_ad';
+                document.body.appendChild(bait)
+            };
 
             /* Check every second if we have triggered the adblocker.
                Try again until we do.
@@ -76,6 +172,8 @@ window['' + randomID + ''] = (function() {
                     check((bait.visibility == 'none'), delay);
                     check((bait.opacity == 0), delay);
                     try {
+                        // Has the adblocker killed the children?
+                        // Check if "click", from "doubleclick.net", still exists.
                         check((document.getElementById('banner_ad').innerHTML.indexOf('click') == -1), delay)
                     } catch (e) {}
                 } else {
@@ -86,7 +184,7 @@ window['' + randomID + ''] = (function() {
 
         /* Checks if the passed predicate is true, and if so, 
            creates the popup window. */
-        check: function(checkPredicate, unused) {
+           check: function(checkPredicate, unused) {
             if ((checkPredicate) && (adblockDetected == 0)) {
                 // The standard bait case: ads are blocked.
                 adblockDetected = 1;
@@ -107,14 +205,17 @@ window['' + randomID + ''] = (function() {
                     sessionStorage.setItem('babn', (Math.random() + 1) * 1000)
                 }
             };
-
+                        
             // Stop the scheduled checks, since we triggered the adblocker. 
             clearInterval(checkCallback);
 
             // Clear the entire document, to avoid simply blocking the BAB div and get access to content.
             document.body.innerHTML = '';
-            
-            // Create the BAB overlay.
+
+            document.body.style.margin = '0px';
+            document.body.style.padding = '0px';
+
+            // Create the BAB overlay.       
             var width = document.documentElement.clientWidth || window.innerWidth || document.body.clientWidth,
                 height = window.innerHeight || document.body.clientHeight || document.documentElement.clientHeight,
                 overlay = document.createElement('DIV'),
@@ -145,12 +246,12 @@ window['' + randomID + ''] = (function() {
             babLink.style.opacity = '.6';
             babLink.style.cursor = 'pointer';
             babLink.addEventListener('click', function() {
-                // De-obfuscate the blockadblock domain name.
+                 // De-obfuscate the blockadblock domain name.
                 bab_domain = bab_domain.split('').reverse().join('');
                 window.location.href = 'http://' + bab_domain
             });
             document.getElementById(overlayID).appendChild(babLink);
-            
+
             // Create the blockadblock text.
             var text = document.createElement('DIV'),
                 textID = randomStr();
@@ -191,7 +292,7 @@ window['' + randomID + ''] = (function() {
             + welcomeFontSize 
             + 'pt;color:' 
             + textColor 
-            + ';font-family:sans-serif;font-weight:200;">' 
+            + ';font-family:sans-serif;font-weight:200;">'
             + welcomeText 
             + '</h3><h1 style="font-size:' 
             + primaryFontSize 
